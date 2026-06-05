@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const { ErrorResponse } = require('./error');
-const User = require('../models/User');
+const { User } = require('../models/User');
+const Admin = require('../models/Admin');
+const logger = require('../config/logger');
 
 // Protect routes
 const protect = async (req, res, next) => {
@@ -23,21 +25,32 @@ const protect = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super_secret_jwt_key_change_me_in_production');
 
-    // Attach user to the request object
-    req.user = await User.findById(decoded.id);
+    // Attach user to the request object, check User first
+    let user = await User.findById(decoded.id);
 
-    if (!req.user) {
+    if (!user) {
+      // Check Admin collection
+      user = await Admin.findById(decoded.id);
+    }
+
+    if (!user) {
       return next(new ErrorResponse('No user found with this id', 404));
     }
 
+    req.user = user;
     next();
   } catch (err) {
+    if (logger && logger.error) {
+      logger.error(`JWT Verification Error: ${err.message}`);
+    } else {
+      console.error(`JWT Verification Error: ${err.message}`);
+    }
     return next(new ErrorResponse('Not authorized to access this route', 401));
   }
 };
 
 // Grant access to specific roles
-const restrictTo = (...roles) => {
+const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
       return next(
@@ -51,4 +64,6 @@ const restrictTo = (...roles) => {
   };
 };
 
-module.exports = { protect, restrictTo };
+const restrictTo = authorize;
+
+module.exports = { protect, authorize, restrictTo };

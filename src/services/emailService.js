@@ -1,4 +1,6 @@
 const nodemailer = require('nodemailer');
+const fs = require('fs').promises;
+const path = require('path');
 
 // Create transporter using environment variables or a mock fallback
 const createTransporter = async () => {
@@ -41,10 +43,17 @@ const createTransporter = async () => {
   }
 };
 
-let transporterPromise = createTransporter();
+let transporter;
+
+const getTransporter = async () => {
+  if (!transporter) {
+    transporter = await createTransporter();
+  }
+  return transporter;
+};
 
 const sendEmail = async (options) => {
-  const transporter = await transporterPromise;
+  const mailTransporter = await getTransporter();
   const mailOptions = {
     from: process.env.FROM_EMAIL || '"CareSync Telemedicine" <noreply@caresync.com>',
     to: options.to,
@@ -54,7 +63,7 @@ const sendEmail = async (options) => {
   };
 
   try {
-    const info = await transporter.sendMail(mailOptions);
+    const info = await mailTransporter.sendMail(mailOptions);
     console.log(`Email sent: ${info.messageId}`);
     // If using Ethereal, log the preview URL
     if (nodemailer.getTestMessageUrl) {
@@ -98,34 +107,42 @@ const sendBookingConfirmation = async (appointment, patient, doctor) => {
 };
 
 /**
- * Send Appointment 1-Hour Reminder Email
+ * Send template-based email (HTML)
  */
-const sendAppointmentReminder = async (appointment, patient, doctor) => {
-  const dateStr = new Date(appointment.date).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+const sendTemplateEmail = async (patient, doctor, appointment, typeLabel) => {
+  try {
+    const templatePath = path.join(__dirname, '../../templates/email/appointment-reminder.html');
+    let htmlContent = await fs.readFile(templatePath, 'utf8');
 
-  const subject = `Reminder: Appointment with Dr. ${doctor.name} in 1 hour - CareSync`;
-  const text = `Dear ${patient.name},\n\nThis is a reminder that your scheduled virtual consultation with Dr. ${doctor.name} starts in 1 hour.\n\nDate: ${dateStr}\nTime: ${appointment.time}\n\nPlease click the link in your dashboard to join the video room.\n\nBest regards,\nCareSync Telemedicine Platform`;
-  const html = `
-    <h3>Dear ${patient.name},</h3>
-    <p>This is a reminder that your scheduled virtual consultation with <strong>Dr. ${doctor.name}</strong> starts in <strong>1 hour</strong>.</p>
-    <ul>
-      <li><strong>Date:</strong> ${dateStr}</li>
-      <li><strong>Time:</strong> ${appointment.time}</li>
-    </ul>
-    <p>Please click the link in your dashboard to join the video room.</p>
-    <br/>
-    <p>Best regards,<br/>CareSync Telemedicine Platform</p>
-  `;
+    const dateStr = new Date(appointment.date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
 
-  return sendEmail({ to: patient.email, subject, text, html });
+    htmlContent = htmlContent
+      .replace(/{{patientName}}/g, patient.name)
+      .replace(/{{doctorName}}/g, doctor.name)
+      .replace(/{{appointmentDate}}/g, dateStr)
+      .replace(/{{appointmentTime}}/g, appointment.time)
+      .replace(/{{reminderType}}/g, typeLabel)
+      .replace(/{{portalUrl}}/g, process.env.FRONTEND_URL || 'http://localhost:3000');
+
+    const text = `Dear ${patient.name},\n\nThis is a reminder that your scheduled virtual consultation with Dr. ${doctor.name} starts in ${typeLabel}.\n\nDate: ${dateStr}\nTime: ${appointment.time}`;
+
+    return sendEmail({
+      to: patient.email,
+      subject: `Reminder: Appointment with Dr. ${doctor.name} - ${typeLabel} - CareSync`,
+      text,
+      html: htmlContent,
+    });
+  } catch (err) {
+    console.error('Error generating template email:', err);
+  }
 };
 
 module.exports = {
   sendBookingConfirmation,
-  sendAppointmentReminder,
+  sendTemplateEmail,
 };

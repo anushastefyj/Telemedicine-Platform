@@ -2,8 +2,18 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const morgan = require('morgan');
+const helmet = require('helmet');
+const xss = require('xss-clean');
+const hpp = require('hpp');
+const mongoSanitize = require('express-mongo-sanitize');
+const swaggerUi = require('swagger-ui-express');
+
 const connectDB = require('./config/db');
 const { errorHandler } = require('./middleware/error');
+const logger = require('./middleware/logger');
+const swaggerSpec = require('../swagger.config');
+const { initReminderCron } = require('./services/reminderCron');
+const { authLimiter, generalLimiter, paymentLimiter } = require('./middleware/rateLimiter');
 
 // Load environment variables
 dotenv.config();
@@ -18,19 +28,69 @@ const appointmentRoutes = require('./routes/appointmentRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const videoRoutes = require('./routes/videoRoutes');
+const reminderRoutes = require('./routes/reminderRoutes');
+const recordRoutes = require('./routes/recordRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
+const aiRoutes = require('./routes/aiRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const availabilityRoutes = require('./routes/availabilityRoutes');
 
 const app = express();
 
 // Body parser
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
-// Enable CORS
-app.use(cors());
+// 1. Security Middlewares
+app.use(helmet()); // Set security headers
+app.use(xss()); // Prevent XSS attacks
+app.use(mongoSanitize()); // Prevent NoSQL Injection
+app.use(hpp()); // Prevent HTTP Parameter Pollution
 
-// Dev logging middleware
-if (process.env.NODE_ENV !== 'production') {
-  app.use(morgan('dev'));
-}
+// Configure CORS to accept only allowed origins or local fallback
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
+  : ['http://localhost:3000'];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  })
+);
+
+// 2. Rate Limiting
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/payments', paymentLimiter);
+app.use('/api', generalLimiter);
+
+// 3. Logger setup (Morgan routing into Winston)
+const morganFormat = process.env.NODE_ENV === 'production' ? 'combined' : 'dev';
+app.use(
+  morgan(morganFormat, {
+    stream: {
+      write: (message) => logger.info(message.trim()),
+    },
+  })
+);
+
+// Serve Swagger specification JSON
+app.get('/docs/swagger.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+// Swagger Documentation UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Mount routers
 app.use('/api/auth', authRoutes);
@@ -39,6 +99,13 @@ app.use('/api/appointments', appointmentRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/video', videoRoutes);
+app.use('/api/reminders', reminderRoutes);
+app.use('/api/records', recordRoutes);
+app.use('/api/dashboards', dashboardRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/availability', availabilityRoutes);
 
 // Simple healthcheck route
 app.get('/health', (req, res) => {
@@ -51,8 +118,13 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
 });
+
+// Initialize Cron Jobs (only if not running Jest tests)
+if (process.env.NODE_ENV !== 'test') {
+  initReminderCron();
+}
 
 // Socket.io Setup
 const socketIo = require('socket.io');
@@ -74,9 +146,9 @@ io.use(socketAuth);
 io.on('connection', (socket) => {
   const userId = socket.user._id.toString();
   const role = socket.user.role;
-  
+
   connectedUsers.set(userId, socket.id);
-  console.log(`User connected: ${userId} (${role}) on socket ${socket.id}`);
+  logger.info(`User connected: ${userId} (${role}) on socket ${socket.id}`);
 
   // Notify other users if a doctor goes online
   if (role === 'doctor') {
@@ -91,7 +163,6 @@ io.on('connection', (socket) => {
         return socket.emit('error', 'Appointment not found');
       }
 
-      // Check if user is either patient or doctor for the appointment
       const isPatient = appointment.patientId.toString() === userId;
       const isDoctor = appointment.doctorId.toString() === userId;
 
@@ -100,12 +171,10 @@ io.on('connection', (socket) => {
       }
 
       socket.join(appointmentId);
-      console.log(`Socket ${socket.id} joined room ${appointmentId}`);
+      logger.info(`Socket ${socket.id} joined room ${appointmentId}`);
 
-      // Notify others in room
       socket.to(appointmentId).emit('user-joined', { userId, role });
 
-      // Automatically change status of appointment to in-progress when both join (or just update status)
       const clientsInRoom = io.sockets.adapter.rooms.get(appointmentId);
       if (clientsInRoom && clientsInRoom.size >= 2 && appointment.status === 'confirmed') {
         appointment.status = 'in-progress';
@@ -115,26 +184,22 @@ io.on('connection', (socket) => {
         io.to(appointmentId).emit('appointment-status-updated', { appointmentId, status: 'in-progress' });
       }
     } catch (err) {
-      console.error('Error on join-room:', err);
+      logger.error(`Error on join-room: ${err.message}`);
     }
   });
 
-  // Relay WebRTC offer
   socket.on('offer', ({ appointmentId, offer }) => {
     socket.to(appointmentId).emit('offer', { offer });
   });
 
-  // Relay WebRTC answer
   socket.on('answer', ({ appointmentId, answer }) => {
     socket.to(appointmentId).emit('answer', { answer });
   });
 
-  // Relay WebRTC ice-candidate
   socket.on('ice-candidate', ({ appointmentId, candidate }) => {
     socket.to(appointmentId).emit('ice-candidate', { candidate });
   });
 
-  // Audio/Video state controls sync
   socket.on('mute-audio', ({ appointmentId }) => {
     socket.to(appointmentId).emit('mute-audio');
   });
@@ -151,30 +216,27 @@ io.on('connection', (socket) => {
     socket.to(appointmentId).emit('untoggle-video');
   });
 
-  // Call ending management
   socket.on('call-ended', async ({ appointmentId }) => {
     try {
       const appointment = await Appointment.findById(appointmentId);
       if (appointment) {
         appointment.callStatus = 'ended';
-        // Auto mark as completed when call ends
         appointment.status = 'completed';
         await appointment.save();
         io.to(appointmentId).emit('appointment-status-updated', { appointmentId, status: 'completed' });
       }
       io.to(appointmentId).emit('call-ended');
     } catch (err) {
-      console.error('Error ending call:', err);
+      logger.error(`Error ending call: ${err.message}`);
     }
   });
 
   socket.on('disconnect', () => {
     connectedUsers.delete(userId);
-    console.log(`User disconnected: ${userId}`);
+    logger.info(`User disconnected: ${userId}`);
   });
 });
 
-// Helper functions for external notifications
 const sendRealTimeNotification = (userId, event, data) => {
   const socketId = connectedUsers.get(userId);
   if (socketId) {
@@ -182,10 +244,8 @@ const sendRealTimeNotification = (userId, event, data) => {
   }
 };
 
-// Handle unhandled promise rejections
 process.on('unhandledRejection', (err, promise) => {
-  console.error(`Unhandled Rejection Error: ${err.message}`);
-  // Close server & exit process
+  logger.error(`Unhandled Rejection Error: ${err.message}`);
   server.close(() => process.exit(1));
 });
 

@@ -56,6 +56,14 @@ const appointmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Prescription',
     },
+    tomorrowReminderSent: {
+      type: Boolean,
+      default: false,
+    },
+    oneHourReminderSent: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

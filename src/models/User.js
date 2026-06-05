@@ -152,7 +152,6 @@ const patientSchema = new mongoose.Schema({
 
 const Doctor = User.discriminator('doctor', doctorSchema);
 const Patient = User.discriminator('patient', patientSchema);
-// Admin can just use base User or we can add an admin discriminator if needed.
 
 module.exports = {
   User,

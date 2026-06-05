@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CareSync Appointment Reminder</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #334155;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+      border: 1px solid #e2e8f0;
+    }
+    .header {
+      background: linear-gradient(135deg, #0f766e, #0d9488);
+      color: #ffffff;
+      padding: 32px 24px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .content {
+      padding: 32px 24px;
+      line-height: 1.6;
+    }
+    .content p {
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .details {
+      background-color: #f1f5f9;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .details-row {
+      margin-bottom: 10px;
+      display: flex;
+    }
+    .details-row:last-child {
+      margin-bottom: 0;
+    }
+    .label {
+      font-weight: 600;
+      width: 120px;
+      color: #475569;
+    }
+    .value {
+      color: #1e293b;
+      flex: 1;
+    }
+    .btn {
+      display: inline-block;
+      background-color: #0d9488;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-align: center;
+      box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2);
+    }
+    .footer {
+      background-color: #f8fafc;
+      padding: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: #94a3b8;
+      border-top: 1px solid #f1f5f9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>CareSync Virtual Consultation</h1>
+    </div>
+    <div class="content">
+      <p>Dear {{patientName}},</p>
+      <p>This is a reminder for your upcoming video consultation with <strong>Dr. {{doctorName}}</strong>.</p>
+      
+      <div class="details">
+        <div class="details-row">
+          <div class="label">Date:</div>
+          <div class="value">{{appointmentDate}}</div>
+        </div>
+        <div class="details-row">
+          <div class="label">Time:</div>
+          <div class="value">{{appointmentTime}}</div>
+        </div>
+        <div class="details-row">
+          <div class="label">Type:</div>
+          <div class="value">{{reminderType}}</div>
+        </div>
+      </div>
+
+      <p>Please log in to your patient portal dashboard at the scheduled time and join the video call room.</p>
+      
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="{{portalUrl}}" class="btn">Go to Patient Dashboard</a>
+      </div>
+    </div>
+    <div class="footer">
+      &copy; 2026 CareSync Telemedicine Platform. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>

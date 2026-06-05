@@ -1,0 +1,16 @@
+[2026-06-06 00:10:17] [INFO]: Server running in test mode on port 5000
+[2026-06-06 00:10:17] [INFO]: [0mPOST /api/auth/register [32m201[0m 224.702 ms - 509[0m
+[2026-06-06 00:10:17] [INFO]: [0mPOST /api/auth/register [32m201[0m 141.881 ms - 567[0m
+[2026-06-06 00:10:17] [INFO]: [0mPOST /api/auth/login [32m200[0m 125.138 ms - 509[0m
+[2026-06-06 00:10:18] [INFO]: [0mPOST /api/auth/login [32m200[0m 108.341 ms - 567[0m
+[2026-06-06 00:10:18] [INFO]: [0mPOST /api/auth/login [33m401[0m 17.798 ms - 47[0m
+[2026-06-06 00:10:18] [INFO]: [0mPUT /api/availability/me/availability [32m200[0m 59.094 ms - 278[0m
+[2026-06-06 00:10:18] [INFO]: [0mGET /api/availability/6a2318110b4f7385a89c76cf/available-slots?date=2026-06-08 [32m200[0m 25.183 ms - 265[0m
+[2026-06-06 00:10:18] [INFO]: [0mPOST /api/appointments [32m201[0m 126.028 ms - 483[0m
+[2026-06-06 00:10:18] [INFO]: [0mGET /api/video/room/6a2318120b4f7385a89c76e9 [33m403[0m 17.278 ms - 98[0m
+[2026-06-06 00:10:18] [INFO]: [0mGET /api/dashboards/doctor [33m403[0m 15.051 ms - 84[0m
+[2026-06-06 00:10:18] [INFO]: [0mGET /api/dashboards/doctor [32m200[0m 58.152 ms - 701[0m
+[2026-06-06 00:10:18] [INFO]: [0mGET /api/dashboards/patient [32m200[0m 36.082 ms - 699[0m
+[2026-06-06 00:10:18] [INFO]: [0mGET /api/dashboards/admin [33m401[0m 10.409 ms - 63[0m
+[2026-06-06 00:10:18] [INFO]: [0mPOST /api/ai/symptoms [32m200[0m 14.384 ms - 499[0m
+[2026-06-06 00:10:18] [INFO]: [0mPOST /api/ai/prescription-summary [32m200[0m 11.041 ms - 267[0m

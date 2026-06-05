@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "C:\\Users\\anush\\Desktop\\anuprojects\\Telemedicine Platform\\logs\\.e2262d64c83d96c234d6486b8a4c5dc3fe52d0d5-audit.json",
+    "files": [
+        {
+            "date": 1780684773117,
+            "name": "C:\\Users\\anush\\Desktop\\anuprojects\\Telemedicine Platform\\logs\\combined-2026-06-06.log",
+            "hash": "65da49941defe6b92392a03f237f3f8ef91adad68501ee2a9b996995d21e7a04"
+        }
+    ],
+    "hashType": "sha256"
+}

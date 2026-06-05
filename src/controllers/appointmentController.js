@@ -1,5 +1,7 @@
 const Appointment = require('../models/Appointment');
 const { Doctor, Patient } = require('../models/User');
+const DoctorAvailability = require('../models/DoctorAvailability');
+const AvailabilityException = require('../models/AvailabilityException');
 const { ErrorResponse, asyncHandler } = require('../middleware/error');
 const { sendBookingConfirmation, sendAppointmentReminder } = require('../services/emailService');
 
@@ -20,6 +22,51 @@ exports.bookAppointment = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse(`Doctor not found with id of ${doctorId}`, 404));
   }
 
+  // Convert date to day of week
+  const appointmentDate = new Date(date);
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayOfWeek = days[appointmentDate.getDay()];
+
+  // Check exceptions first
+  const targetDate = new Date(date);
+  targetDate.setHours(0, 0, 0, 0);
+  const exception = await AvailabilityException.findOne({ doctorId, date: targetDate });
+  if (exception && exception.isBlocked) {
+    return next(new ErrorResponse('The doctor is not available on this date (vacation/blocked)', 400));
+  }
+
+  // Find if slot exists in DoctorAvailability
+  const availability = await DoctorAvailability.findOne({
+    doctorId,
+    dayOfWeek,
+    startTime: { $lte: time },
+    endTime: { $gte: time },
+    isAvailable: true,
+  });
+
+  // If doctor availability is defined, validate the slot
+  const availabilityCount = await DoctorAvailability.countDocuments({ doctorId });
+  if (availabilityCount > 0 && !availability) {
+    return next(new ErrorResponse('The selected time slot is outside of doctor availability hours', 400));
+  }
+
+  // Check if slot is already booked
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const existingApp = await Appointment.findOne({
+    doctorId,
+    date: { $gte: startOfDay, $lte: endOfDay },
+    time,
+    status: { $in: ['pending', 'confirmed', 'in-progress'] },
+  });
+
+  if (existingApp) {
+    return next(new ErrorResponse('This time slot is already booked', 400));
+  }
+
   // Create video call room ID automatically
   const videoCallId = generateVideoCallId();
 
@@ -28,7 +75,7 @@ exports.bookAppointment = asyncHandler(async (req, res, next) => {
     doctorId,
     date,
     time,
-    duration,
+    duration: duration || 30,
     reason,
     symptoms,
     videoCallId,
