@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Loader2, User, Mail, Lock, Phone, MapPin, Award, DollarSign, FileText } from 'lucide-react';
+import { Loader2, User, Stethoscope, Info } from 'lucide-react';
 import Alert from '../components/Common/Alert';
 
 const RegisterPage = () => {
@@ -11,18 +11,18 @@ const RegisterPage = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
-  const [role, setRole] = useState('patient'); // Default role: patient
+  const [role, setRole] = useState('patient');
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     reset,
-  } = useForm();
+  } = useForm({ mode: 'onChange' });
 
-  const handleRoleChange = (e) => {
-    setRole(e.target.value);
-    reset(); // Clear errors and inputs when switching role structure
+  const handleRoleChange = (newRole) => {
+    setRole(newRole);
+    reset();
   };
 
   const onSubmit = async (data) => {
@@ -30,7 +30,6 @@ const RegisterPage = () => {
     setErrorMsg('');
     setSuccessMsg('');
 
-    // Pre-format nested structure for Patient / Doctor
     const payload = {
       name: data.name,
       email: data.email,
@@ -45,26 +44,15 @@ const RegisterPage = () => {
       payload.experience = parseFloat(data.experience);
       payload.consultationFee = parseFloat(data.consultationFee);
       payload.licenseNumber = data.licenseNumber;
-    } else if (role === 'patient') {
-      payload.medicalHistory = data.medicalHistory ? data.medicalHistory.split(',').map((h) => h.trim()) : [];
-      payload.allergies = data.allergies ? data.allergies.split(',').map((a) => a.trim()) : [];
-      payload.insuranceInfo = {
-        provider: data.insuranceProvider || '',
-        policyNumber: data.insurancePolicyNumber || '',
-      };
-    }
+    } 
 
     const res = await authRegister(payload);
     setLoading(false);
 
     if (res.success) {
-      setSuccessMsg('Registration successful! Redirecting...');
+      setSuccessMsg('Registration successful! Redirecting to login...');
       setTimeout(() => {
-        if (role === 'doctor') {
-          navigate('/doctor-dashboard');
-        } else {
-          navigate('/patient-dashboard');
-        }
+        navigate('/login');
       }, 1500);
     } else {
       setErrorMsg(res.message || 'Registration failed. Try again.');
@@ -72,267 +60,191 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12">
-      <div className="max-w-xl w-full space-y-8 bg-white p-8 rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/50">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-slate-900">Create Account</h2>
-          <p className="text-sm text-slate-500 mt-2">Join CareSync healthcare platform</p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-primary-600 p-4 font-sans relative overflow-hidden">
+      <div className="w-full max-w-2xl relative flex items-center justify-center z-10 my-8">
+        <div className="bg-slate-50 w-full max-w-2xl rounded-[2rem] p-8 md:p-12 shadow-xl flex flex-col h-full max-h-[85vh]">
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-2 text-center">Create your account</h2>
+          <p className="text-slate-500 font-medium text-center mb-8">Join ASISHCARE CONSULTING today.</p>
 
-        <Alert type="error" message={errorMsg} onClose={() => setErrorMsg('')} />
-        <Alert type="success" message={successMsg} />
+          <Alert type="error" message={errorMsg} onClose={() => setErrorMsg('')} />
+          <Alert type="success" message={successMsg} />
 
-        {/* Role Selector Tabs */}
-        <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-xl text-center">
-          <button
-            type="button"
-            onClick={() => setRole('patient')}
-            className={`py-2 text-sm font-semibold rounded-lg transition-all ${
-              role === 'patient' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            I am a Patient
-          </button>
-          <button
-            type="button"
-            onClick={() => setRole('doctor')}
-            className={`py-2 text-sm font-semibold rounded-lg transition-all ${
-              role === 'doctor' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            I am a Doctor
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Name */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Full Name</label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 text-slate-400 h-4.5 w-4.5" />
-                <input
-                  type="text"
-                  placeholder="John Doe"
-                  {...register('name', { required: 'Full Name is required' })}
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                />
-              </div>
-              {errors.name && <span className="text-[10px] text-rose-500 font-semibold">{errors.name.message}</span>}
-            </div>
-
-            {/* Email */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 text-slate-400 h-4.5 w-4.5" />
-                <input
-                  type="email"
-                  placeholder="john@example.com"
-                  {...register('email', {
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-                      message: 'Invalid email address',
-                    },
-                  })}
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                />
-              </div>
-              {errors.email && <span className="text-[10px] text-rose-500 font-semibold">{errors.email.message}</span>}
-            </div>
-
-            {/* Password */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 text-slate-400 h-4.5 w-4.5" />
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  {...register('password', {
-                    required: 'Password is required',
-                    minLength: { value: 6, message: 'Minimum 6 characters' },
-                  })}
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                />
-              </div>
-              {errors.password && <span className="text-[10px] text-rose-500 font-semibold">{errors.password.message}</span>}
-            </div>
-
-            {/* Phone */}
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Phone Number</label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-3 text-slate-400 h-4.5 w-4.5" />
-                <input
-                  type="text"
-                  placeholder="+1 (555) 000-0000"
-                  {...register('phone')}
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                />
-              </div>
-            </div>
+          {/* Role Selector Toggle Cards */}
+          <div className="grid grid-cols-2 gap-4 mb-8 shrink-0">
+            <button
+              type="button"
+              onClick={() => handleRoleChange('patient')}
+              className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+                role === 'patient' 
+                  ? 'border-primary-600 bg-primary-50 text-primary-800 shadow-sm transform scale-[1.02]' 
+                  : 'border-slate-200 bg-white text-slate-500 hover:border-primary-200 hover:bg-slate-50'
+              }`}
+            >
+              <User size={32} className={`mb-2 ${role === 'patient' ? 'text-primary-600' : 'text-slate-400'}`} />
+              <span className="font-bold text-sm">I am a Patient</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleRoleChange('doctor')}
+              className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+                role === 'doctor' 
+                  ? 'border-primary-600 bg-primary-50 text-primary-800 shadow-sm transform scale-[1.02]' 
+                  : 'border-slate-200 bg-white text-slate-500 hover:border-primary-200 hover:bg-slate-50'
+              }`}
+            >
+              <Stethoscope size={32} className={`mb-2 ${role === 'doctor' ? 'text-primary-600' : 'text-slate-400'}`} />
+              <span className="font-bold text-sm">I am a Doctor</span>
+            </button>
           </div>
 
-          {/* Address */}
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Address</label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-3 text-slate-400 h-4.5 w-4.5" />
-              <input
-                type="text"
-                placeholder="123 Care St, Health City"
-                {...register('address')}
-                className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-              />
-            </div>
+          <div className="overflow-y-auto flex-1 px-2 custom-scrollbar text-left">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pb-4">
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1 ml-1">Full Name</label>
+                  <input
+                    type="text"
+                    placeholder="John Doe"
+                    {...register('name', { required: 'Name is required' })}
+                    className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm font-medium transition"
+                  />
+                  {errors.name && <span className="text-[10px] text-rose-500 font-bold block mt-1 ml-1">{errors.name.message}</span>}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1 ml-1">Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="john@example.com"
+                    {...register('email', { 
+                      required: 'Email is required',
+                      pattern: { value: /^\S+@\S+$/i, message: 'Invalid email' }
+                    })}
+                    className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm font-medium transition"
+                  />
+                  {errors.email && <span className="text-[10px] text-rose-500 font-bold block mt-1 ml-1">{errors.email.message}</span>}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1 ml-1">Password</label>
+                  <input
+                    type="password"
+                    placeholder="Min. 6 characters"
+                    {...register('password', { required: 'Password required', minLength: { value: 6, message: 'Min 6 characters' } })}
+                    className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm font-medium transition"
+                  />
+                  {errors.password && <span className="text-[10px] text-rose-500 font-bold block mt-1 ml-1">{errors.password.message}</span>}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1 ml-1">Phone Number</label>
+                  <input
+                    type="text"
+                    placeholder="+1 (555) 000-0000"
+                    {...register('phone')}
+                    className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm font-medium transition"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1 ml-1">Address</label>
+                <input
+                  type="text"
+                  placeholder="123 Medical Drive, City, State"
+                  {...register('address')}
+                  className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm font-medium transition"
+                />
+              </div>
+
+              {role === 'doctor' && (
+                <div className="space-y-5 border-t-2 border-slate-100 pt-6 mt-4">
+                  <div className="flex items-center space-x-2 text-primary-600 mb-2">
+                    <Stethoscope size={20} />
+                    <h3 className="font-bold text-lg text-slate-800">Professional Credentials</h3>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1 ml-1">Specialty</label>
+                      <select
+                        {...register('specialty', { required: 'Specialty required' })}
+                        className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm font-medium transition"
+                      >
+                        <option value="">Select Specialty</option>
+                        <option value="Cardiology">Cardiology</option>
+                        <option value="Dermatology">Dermatology</option>
+                        <option value="Pediatrics">Pediatrics</option>
+                        <option value="General Medicine">General Medicine</option>
+                        <option value="Neurology">Neurology</option>
+                        <option value="Psychiatry">Psychiatry</option>
+                      </select>
+                      {errors.specialty && <span className="text-[10px] text-rose-500 font-bold block mt-1 ml-1">{errors.specialty.message}</span>}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1 ml-1">License Number</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. MD-123456"
+                        {...register('licenseNumber', { 
+                          required: 'License number required',
+                          pattern: {
+                            value: /^[A-Z]{2,3}-\d{4,8}$/i,
+                            message: 'Format must be like MD-123456'
+                          }
+                        })}
+                        className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm font-medium transition"
+                      />
+                      {errors.licenseNumber && <span className="text-[10px] text-rose-500 font-bold block mt-1 ml-1">{errors.licenseNumber.message}</span>}
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1 ml-1">Experience (Years)</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 10"
+                        {...register('experience', { required: 'Required', min: 0 })}
+                        className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm font-medium transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1 ml-1">Consultation Fee (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 499"
+                        {...register('consultationFee', { required: 'Required', min: 0 })}
+                        className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-xl text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm font-medium transition"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-primary-50 rounded-xl p-4 flex items-start space-x-3 border border-primary-100">
+                    <Info size={20} className="text-primary-600 shrink-0 mt-0.5" />
+                    <p className="text-sm font-medium text-primary-800">
+                      <strong>Verification Notice:</strong> Your medical license will be manually verified by our compliance team before your profile becomes visible to patients.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-6">
+                <button
+                  type="submit"
+                  disabled={loading || !isValid}
+                  className="w-full py-4 bg-primary-600 hover:bg-primary-700 text-white font-black rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed text-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  {loading ? <Loader2 className="animate-spin h-6 w-6 mx-auto" /> : 'Create Account'}
+                </button>
+              </div>
+            </form>
           </div>
 
-          {/* DYNAMIC FIELDSET FOR DOCTORS */}
-          {role === 'doctor' && (
-            <div className="border-t border-slate-100 pt-4 mt-2 space-y-4 fade-in">
-              <h3 className="font-bold text-slate-800 text-sm">Professional Information</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Specialty */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Specialty</label>
-                  <select
-                    {...register('specialty', { required: 'Specialty is required' })}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                  >
-                    <option value="">Select Specialty</option>
-                    <option value="Cardiology">Cardiology</option>
-                    <option value="Dermatology">Dermatology</option>
-                    <option value="Pediatrics">Pediatrics</option>
-                    <option value="General Medicine">General Medicine</option>
-                    <option value="Neurology">Neurology</option>
-                    <option value="Psychiatry">Psychiatry</option>
-                  </select>
-                  {errors.specialty && <span className="text-[10px] text-rose-500 font-semibold">{errors.specialty.message}</span>}
-                </div>
+          <div className="mt-6 shrink-0 text-center">
+            <p className="text-sm font-medium text-slate-500">
+              Already have an account?{' '}
+              <Link to="/login" className="font-bold text-primary-600 hover:text-primary-700 hover:underline transition">
+                Sign In
+              </Link>
+            </p>
+          </div>
 
-                {/* License Number */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">License Number</label>
-                  <div className="relative">
-                    <Award className="absolute left-3 top-3 text-slate-400 h-4.5 w-4.5" />
-                    <input
-                      type="text"
-                      placeholder="MD123456"
-                      {...register('licenseNumber', { required: 'License number is required' })}
-                      className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                    />
-                  </div>
-                  {errors.licenseNumber && <span className="text-[10px] text-rose-500 font-semibold">{errors.licenseNumber.message}</span>}
-                </div>
-
-                {/* Experience */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Experience (Years)</label>
-                  <input
-                    type="number"
-                    placeholder="5"
-                    {...register('experience', { required: 'Experience is required', min: 0 })}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                  />
-                  {errors.experience && <span className="text-[10px] text-rose-500 font-semibold">{errors.experience.message}</span>}
-                </div>
-
-                {/* Consultation Fee */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Consultation Fee ($)</label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-3.5 text-slate-400 h-4 w-4" />
-                    <input
-                      type="number"
-                      placeholder="100"
-                      {...register('consultationFee', { required: 'Fee is required', min: 0 })}
-                      className="w-full pl-8 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                    />
-                  </div>
-                  {errors.consultationFee && <span className="text-[10px] text-rose-500 font-semibold">{errors.consultationFee.message}</span>}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* DYNAMIC FIELDSET FOR PATIENTS */}
-          {role === 'patient' && (
-            <div className="border-t border-slate-100 pt-4 mt-2 space-y-4 fade-in">
-              <h3 className="font-bold text-slate-800 text-sm">Medical Details (Optional)</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Medical History */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Medical History</label>
-                  <input
-                    type="text"
-                    placeholder="Asthma, Hypertension (comma separated)"
-                    {...register('medicalHistory')}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                  />
-                </div>
-
-                {/* Allergies */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Allergies</label>
-                  <input
-                    type="text"
-                    placeholder="Peanuts, Penicillin (comma separated)"
-                    {...register('allergies')}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                  />
-                </div>
-
-                {/* Insurance Provider */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Insurance Provider</label>
-                  <input
-                    type="text"
-                    placeholder="Blue Cross"
-                    {...register('insuranceProvider')}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                  />
-                </div>
-
-                {/* Policy Number */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Policy Number</label>
-                  <input
-                    type="text"
-                    placeholder="POL123456"
-                    {...register('insurancePolicyNumber')}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex items-center justify-center space-x-2 py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl transition shadow-md shadow-primary-500/10 disabled:opacity-50"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="animate-spin h-5 w-5" />
-                <span>Creating Account...</span>
-              </>
-            ) : (
-              <span>Sign Up</span>
-            )}
-          </button>
-        </form>
-
-        <div className="text-center pt-2 border-t border-slate-100">
-          <p className="text-sm text-slate-500">
-            Already have an account?{' '}
-            <Link to="/login" className="font-semibold text-primary-500 hover:text-primary-600 transition">
-              Sign In
-            </Link>
-          </p>
         </div>
       </div>
     </div>

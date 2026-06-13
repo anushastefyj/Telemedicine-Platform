@@ -88,8 +88,14 @@ exports.login = asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse('Please provide an email and password', 400));
   }
 
-  // Check for user
-  const user = await User.findOne({ email }).select('+password');
+  // Check User collection first
+  let user = await User.findOne({ email }).select('+password');
+
+  // If not found in User, check Admin collection
+  if (!user) {
+    const Admin = require('../models/Admin');
+    user = await Admin.findOne({ email }).select('+password');
+  }
 
   if (!user) {
     return next(new ErrorResponse('Invalid credentials', 401));
@@ -142,3 +148,30 @@ exports.updatePassword = asyncHandler(async (req, res, next) => {
 
   sendTokenResponse(user, 200, res);
 });
+
+// @desc    Upload / update profile photo
+// @route   PUT /api/auth/profile-photo
+// @access  Private
+exports.uploadProfilePhoto = asyncHandler(async (req, res, next) => {
+  if (!req.file) {
+    return next(new ErrorResponse('Please upload an image file', 400));
+  }
+
+  const user = await User.findById(req.user.id);
+  if (!user) {
+    return next(new ErrorResponse('User not found', 404));
+  }
+
+  // Cloudinary stores the URL in req.file.path (multer-storage-cloudinary)
+  user.profilePic = req.file.path;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Profile photo updated successfully',
+    data: {
+      profilePic: user.profilePic,
+    },
+  });
+});
+

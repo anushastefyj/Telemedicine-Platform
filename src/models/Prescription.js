@@ -35,6 +35,10 @@ const prescriptionSchema = new mongoose.Schema(
           type: String,
           required: [true, 'Duration is required'], // e.g. "7 days" or "1 month"
         },
+        daysTaken: {
+          type: Number,
+          default: 0,
+        },
       },
     ],
     instructions: {

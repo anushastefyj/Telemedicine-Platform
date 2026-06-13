@@ -14,16 +14,33 @@ const medicalRecordSchema = new mongoose.Schema(
     },
     fileUrl: {
       type: String,
-      required: true,
+      required: false,
     },
     fileType: {
       type: String,
       enum: ['pdf', 'image'],
-      required: true,
+      required: false,
     },
     fileName: {
       type: String,
-      required: true,
+      required: false,
+    },
+    // Form-based report fields
+    symptoms: {
+      type: String,
+      trim: true,
+    },
+    diagnosis: {
+      type: String,
+      trim: true,
+    },
+    treatmentPlan: {
+      type: String,
+      trim: true,
+    },
+    notes: {
+      type: String,
+      trim: true,
     },
     uploadedAt: {
       type: Date,

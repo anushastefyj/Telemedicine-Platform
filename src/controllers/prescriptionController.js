@@ -93,3 +93,54 @@ exports.getPrescriptionsByPatient = asyncHandler(async (req, res, next) => {
     data: prescriptions,
   });
 });
+
+// @desc    Update medication adherence (increment days taken)
+// @route   PUT /api/prescriptions/:id/medications/:medId/take
+// @access  Private (Patient only)
+exports.updateMedicationAdherence = asyncHandler(async (req, res, next) => {
+  const { id, medId } = req.params;
+
+  const prescription = await Prescription.findById(id);
+  if (!prescription) {
+    return next(new ErrorResponse(`Prescription not found with id of ${id}`, 404));
+  }
+
+  // Ensure this patient owns the prescription
+  if (prescription.patientId.toString() !== req.user.id) {
+    return next(new ErrorResponse('Not authorized to update this prescription', 403));
+  }
+
+  // Find medication
+  const medication = prescription.medications.id(medId);
+  if (!medication) {
+    return next(new ErrorResponse(`Medication not found with id of ${medId}`, 404));
+  }
+
+  // Increment daysTaken
+  medication.daysTaken += 1;
+  await prescription.save();
+
+  res.status(200).json({
+    success: true,
+    data: prescription,
+  });
+});
+
+// @desc    Get all prescriptions written by a doctor
+// @route   GET /api/prescriptions/doctor
+// @access  Private (Doctor only)
+exports.getPrescriptionsByDoctor = asyncHandler(async (req, res, next) => {
+  if (req.user.role !== 'doctor') {
+    return next(new ErrorResponse('Not authorized to view these prescriptions', 403));
+  }
+
+  const prescriptions = await Prescription.find({ doctorId: req.user.id })
+    .populate({ path: 'patientId', select: 'name email profilePic' })
+    .sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    count: prescriptions.length,
+    data: prescriptions,
+  });
+});

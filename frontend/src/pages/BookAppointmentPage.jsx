@@ -3,11 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import { getDoctorByIdAPI, bookAppointmentAPI, createPaymentIntentAPI, confirmPaymentAPI } from '../services/api';
-import ScheduleCalendar from '../components/ScheduleCalendar';
 import PaymentForm from '../components/PaymentForm';
 import LoadingSpinner from '../components/Common/LoadingSpinner';
 import Alert from '../components/Common/Alert';
-import { Calendar, Clock, DollarSign, FileText } from 'lucide-react';
 
 const stripePromise = loadStripe('pk_test_mock_stripe_key_placeholder');
 
@@ -22,7 +20,6 @@ const BookAppointmentPage = () => {
   // Booking details state
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedTime, setSelectedTime] = useState('');
-  const [reason, setReason] = useState('');
   const [symptoms, setSymptoms] = useState('');
 
   // Checkout states
@@ -49,15 +46,17 @@ const BookAppointmentPage = () => {
     fetchDoctor();
   }, [doctorId]);
 
-  // Generate generic list of daily slots for demo purposes
   const slots = [
-    '09:00 AM',
-    '10:00 AM',
-    '11:00 AM',
-    '01:00 PM',
-    '02:00 PM',
-    '03:00 PM',
-    '04:00 PM',
+    { time: '9:00 AM', type: 'morning' },
+    { time: '9:30 AM', type: 'morning' },
+    { time: '10:00 AM', type: 'midday' },
+    { time: '10:30 AM', type: 'midday' },
+    { time: '11:00 AM', type: 'midday' },
+    { time: '11:30 AM', type: 'midday' },
+    { time: '12:00 PM', type: 'morning' },
+    { time: '2:00 PM', type: 'morning' },
+    { time: '3:00 PM', type: 'midday' },
+    { time: '3:30 PM', type: 'midday' },
   ];
 
   const handleCreateAppointment = async (e) => {
@@ -66,7 +65,7 @@ const BookAppointmentPage = () => {
       setErrorMsg('Please select a time slot for the appointment.');
       return;
     }
-    if (!reason) {
+    if (!symptoms) {
       setErrorMsg('Please provide a reason for the consultation.');
       return;
     }
@@ -75,23 +74,20 @@ const BookAppointmentPage = () => {
     setErrorMsg('');
 
     try {
-      // 1. Book the appointment (pending state)
       const res = await bookAppointmentAPI({
         doctorId,
         date: selectedDate.toISOString(),
         time: selectedTime,
-        reason,
+        reason: 'General Consultation',
         symptoms,
       });
 
       if (res.success) {
         setAppointment(res.data);
-
-        // 2. Fetch Payment Intent for the appointment
         const payRes = await createPaymentIntentAPI({ appointmentId: res.data._id });
         if (payRes.success) {
           setClientSecret(payRes.clientSecret);
-          setStep(2); // advance to checkout payment
+          setStep(2);
         } else {
           setErrorMsg('Failed to create payment intent');
         }
@@ -108,7 +104,6 @@ const BookAppointmentPage = () => {
   const handlePaymentSuccess = async (paymentIntentId) => {
     setLoading(true);
     try {
-      // Confirm payment in backend (which sets paymentStatus='paid' and status='confirmed')
       const res = await confirmPaymentAPI({
         appointmentId: appointment._id,
         paymentId: paymentIntentId,
@@ -133,83 +128,107 @@ const BookAppointmentPage = () => {
   if (!doctor) return null;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Book Virtual Consult</h1>
-        <p className="text-slate-500 mt-1">Consultation with Dr. {doctor.name}</p>
-      </div>
+    <div className="bg-dark-900 min-h-screen py-12">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Header Title Bar */}
+        <div className="bg-dark-800 border border-dark-700 rounded-t-3xl p-6 flex items-center justify-center relative mb-1">
+          <span className="px-6 py-2 bg-primary-50 text-primary-800 rounded-full font-bold text-sm">
+            Book appointment
+          </span>
+        </div>
 
-      <Alert type="error" message={errorMsg} onClose={() => setErrorMsg('')} />
-      <Alert type="success" message={successMsg} />
+        {/* Main Content Area */}
+        <div className="bg-dark-800 border border-dark-700 rounded-b-3xl p-8 shadow-sm">
+          <Alert type="error" message={errorMsg} onClose={() => setErrorMsg('')} />
+          <Alert type="success" message={successMsg} />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left column: Pick Date/Time or Summary */}
-        <div className="md:col-span-2 space-y-6">
           {step === 1 ? (
-            <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-6">
-              <div>
-                <h3 className="font-bold text-slate-800 text-sm mb-3">1. Select Date</h3>
-                <ScheduleCalendar
-                  selectedDate={selectedDate}
-                  onDateChange={setSelectedDate}
-                  availability={doctor.availability}
-                />
-              </div>
-
-              <div>
-                <h3 className="font-bold text-slate-800 text-sm mb-3">2. Choose Time Slot</h3>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                  {slots.map((slot) => (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => setSelectedTime(slot)}
-                      className={`py-2 text-xs font-semibold rounded-xl border transition ${
-                        selectedTime === slot
-                          ? 'bg-primary-500 text-white border-primary-500 shadow-sm'
-                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  ))}
+            <div className="flex flex-col md:flex-row gap-12">
+              
+              {/* Doctor Card Profile */}
+              <div className="w-full md:w-1/3 shrink-0">
+                <div className="border border-dark-700 rounded-2xl p-8 flex flex-col items-center text-center">
+                  {doctor.profilePic ? (
+                    <img src={doctor.profilePic} alt={doctor.name} className="w-24 h-24 rounded-full object-cover mb-4" />
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-[#E0E7FF] text-[#4338CA] flex items-center justify-center font-bold text-2xl mb-4">
+                      {doctor.name.charAt(0).toUpperCase()}{doctor.name.split(' ')[1]?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <h3 className="font-bold text-white text-xl">Dr. {doctor.name}</h3>
+                  <p className="text-dark-300 text-sm mb-4">{doctor.specialty}</p>
+                  
+                  <span className="px-4 py-1 bg-primary-50 text-primary-800 rounded-full text-xs font-bold mb-8">
+                    Available today
+                  </span>
+                  
+                  <div className="w-full pt-6 border-t border-dark-700">
+                    <p className="text-dark-300 text-sm mb-1">Consultation fee</p>
+                    <p className="text-white font-bold text-3xl">₹{doctor.consultationFee || 200}</p>
+                  </div>
                 </div>
               </div>
 
-              <form onSubmit={handleCreateAppointment} className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Reason for Visit</label>
-                  <input
-                    type="text"
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder="e.g. Regular health checkup, persistent cough..."
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                  />
-                </div>
+              {/* Time Slots & Form */}
+              <div className="w-full md:w-2/3">
+                <form onSubmit={handleCreateAppointment} className="space-y-8">
+                  
+                  {/* Slots */}
+                  <div>
+                    <h3 className="font-bold text-white text-lg mb-4">Select a time slot</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {slots.map((slot) => {
+                        const isSelected = selectedTime === slot.time;
+                        let colorClass = '';
+                        
+                        if (isSelected) {
+                          colorClass = 'bg-primary-500 text-white border-primary-500';
+                        } else if (slot.type === 'morning') {
+                          colorClass = 'bg-[#FDF6E3] text-[#B45309] border-[#FDF6E3] hover:brightness-95';
+                        } else {
+                          colorClass = 'bg-primary-50 text-primary-800 border-primary-50 hover:brightness-95';
+                        }
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">Symptoms (Optional)</label>
-                  <textarea
-                    value={symptoms}
-                    onChange={(e) => setSymptoms(e.target.value)}
-                    placeholder="Describe any symptoms you are experiencing..."
-                    rows="3"
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                  />
-                </div>
+                        return (
+                          <button
+                            key={slot.time}
+                            type="button"
+                            onClick={() => setSelectedTime(slot.time)}
+                            className={`py-3 text-sm font-bold rounded-xl border transition-all ${colorClass}`}
+                          >
+                            {slot.time}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl transition shadow-md shadow-primary-500/10"
-                >
-                  Confirm & Go to Checkout
-                </button>
-              </form>
+                  {/* Reason text area */}
+                  <div>
+                    <h3 className="text-dark-200 text-sm mb-2">Reason for visit</h3>
+                    <textarea
+                      value={symptoms}
+                      onChange={(e) => setSymptoms(e.target.value)}
+                      placeholder="Describe your symptoms..."
+                      rows="3"
+                      className="w-full px-4 py-4 bg-dark-900 border border-dark-700 rounded-xl focus:outline-none focus:border-dark-500 text-white placeholder-dark-400 resize-none transition"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-fit px-8 py-3.5 bg-transparent border border-dark-600 hover:bg-dark-700 text-white font-medium rounded-xl transition"
+                  >
+                    Confirm booking
+                  </button>
+                </form>
+              </div>
+
             </div>
           ) : (
-            <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-6">
-              <h3 className="font-bold text-slate-800 text-sm pb-2 border-b border-slate-100">
+            <div className="max-w-xl mx-auto space-y-6">
+              <h3 className="font-bold text-white text-lg pb-2 border-b border-dark-700">
                 Complete Consultation Payment
               </h3>
               {clientSecret && (
@@ -219,37 +238,7 @@ const BookAppointmentPage = () => {
               )}
             </div>
           )}
-        </div>
 
-        {/* Right column: Summary Detail Card */}
-        <div className="md:col-span-1">
-          <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm space-y-4">
-            <h4 className="font-bold text-slate-800 text-sm border-b border-slate-50 pb-2">Consultation Summary</h4>
-            <div className="space-y-3 text-xs text-slate-600">
-              <div className="flex justify-between">
-                <span>Specialist</span>
-                <span className="font-semibold text-slate-800">Dr. {doctor.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Specialty</span>
-                <span className="font-semibold text-slate-800">{doctor.specialty}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Date</span>
-                <span className="font-semibold text-slate-800">
-                  {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Time Slot</span>
-                <span className="font-semibold text-slate-800">{selectedTime || 'Not selected'}</span>
-              </div>
-              <div className="border-t border-slate-50 pt-3 flex justify-between text-sm">
-                <span className="font-bold text-slate-800">Consultation Fee</span>
-                <span className="font-black text-primary-600">${doctor.consultationFee}</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

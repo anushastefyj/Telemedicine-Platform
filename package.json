@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles"
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:frontend\"",
+    "test": "cross-env NODE_ENV=test jest --runInBand --detectOpenHandles --forceExit"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -38,6 +40,7 @@
     "xss-clean": "^0.1.4"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "jest": "^30.4.2",
     "nodemon": "^3.1.0",

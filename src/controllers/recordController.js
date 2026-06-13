@@ -47,6 +47,41 @@ exports.uploadRecord = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc    Create a form-based medical report (no file upload)
+// @route   POST /api/records
+// @access  Private (Doctor only)
+exports.createReportRecord = asyncHandler(async (req, res, next) => {
+  const { appointmentId, patientId, symptoms, diagnosis, treatmentPlan, notes } = req.body;
+
+  if (!appointmentId || !patientId) {
+    return next(new ErrorResponse('Appointment ID and Patient ID are required', 400));
+  }
+
+  // Authorization: Only doctor can create report
+  if (req.user.role !== 'doctor') {
+    return next(new ErrorResponse('Only doctors can create medical reports', 403));
+  }
+
+  const record = await MedicalRecord.create({
+    patientId,
+    appointmentId,
+    symptoms,
+    diagnosis,
+    treatmentPlan,
+    notes,
+  });
+
+  // Emit real-time notification to the patient using the function stored in app.locals
+  if (req.app.locals.sendRealTimeNotification) {
+    req.app.locals.sendRealTimeNotification(patientId, 'receive-medical-record', record);
+  }
+
+  res.status(201).json({
+    success: true,
+    data: record,
+  });
+});
+
 // @desc    Get all records for a patient
 // @route   GET /api/records/patient/:patientId
 // @access  Private

@@ -116,7 +116,7 @@ const AppointmentCard = ({ appointment, role, onCancel, onConfirm, onComplete })
         {/* View/Add prescription buttons */}
         {prescriptionId ? (
           <Link
-            to={`/prescriptions/appointment/${_id}`}
+            to={`/appointments/${_id}`}
             className="flex items-center space-x-1.5 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white font-medium text-xs rounded-xl transition"
           >
             <FileText size={14} />
@@ -124,7 +124,7 @@ const AppointmentCard = ({ appointment, role, onCancel, onConfirm, onComplete })
           </Link>
         ) : (
           role === 'doctor' &&
-          status === 'completed' && (
+          ['confirmed', 'completed'].includes(status) && (
             <Link
               to={`/appointments/${_id}`}
               className="flex items-center space-x-1.5 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white font-medium text-xs rounded-xl transition"

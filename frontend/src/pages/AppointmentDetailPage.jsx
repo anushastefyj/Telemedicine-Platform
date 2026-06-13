@@ -290,12 +290,12 @@ const AppointmentDetailPage = () => {
         {prescription && (
           <div className="fade-in">
             <h3 className="font-bold text-slate-800 text-sm mb-4">Consultation Prescription</h3>
-            <PrescriptionCard prescription={prescription} />
+            <PrescriptionCard prescription={prescription} role={user?.role} />
           </div>
         )}
 
         {/* Doctor: Write Prescription Form */}
-        {user.role === 'doctor' && appointment.status === 'completed' && !prescription && (
+        {user.role === 'doctor' && ['confirmed', 'completed'].includes(appointment.status) && !prescription && (
           <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6 fade-in">
             <h3 className="font-bold text-slate-800 text-base pb-2 border-b border-slate-100">
               Write New Prescription

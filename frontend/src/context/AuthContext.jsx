@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
         setToken(res.token);
         setUser(res.data);
         setIsAuthenticated(true);
-        return { success: true };
+        return { success: true, user: res.data };
       }
       return { success: false, message: 'Invalid credentials' };
     } catch (err) {

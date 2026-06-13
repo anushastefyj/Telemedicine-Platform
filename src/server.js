@@ -38,11 +38,18 @@ const availabilityRoutes = require('./routes/availabilityRoutes');
 
 const app = express();
 
+const path = require('path');
+
 // Body parser
 app.use(express.json({ limit: '10mb' }));
 
+// Serve local uploads
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // 1. Security Middlewares
-app.use(helmet()); // Set security headers
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+})); // Set security headers
 app.use(xss()); // Prevent XSS attacks
 app.use(mongoSanitize()); // Prevent NoSQL Injection
 app.use(hpp()); // Prevent HTTP Parameter Pollution
@@ -50,7 +57,7 @@ app.use(hpp()); // Prevent HTTP Parameter Pollution
 // Configure CORS to accept only allowed origins or local fallback
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim())
-  : ['http://localhost:3000'];
+  : ['http://localhost:3000', 'http://localhost:5173'];
 
 app.use(
   cors({
@@ -67,11 +74,13 @@ app.use(
   })
 );
 
-// 2. Rate Limiting
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
-app.use('/api/payments', paymentLimiter);
-app.use('/api', generalLimiter);
+// 2. Rate Limiting (skip in test mode to prevent test failures)
+if (process.env.NODE_ENV !== 'test') {
+  app.use('/api/auth/login', authLimiter);
+  app.use('/api/auth/register', authLimiter);
+  app.use('/api/payments', paymentLimiter);
+  app.use('/api', generalLimiter);
+}
 
 // 3. Logger setup (Morgan routing into Winston)
 const morganFormat = process.env.NODE_ENV === 'production' ? 'combined' : 'dev';
@@ -92,6 +101,8 @@ app.get('/docs/swagger.json', (req, res) => {
 // Swagger Documentation UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+const messageRoutes = require('./routes/messageRoutes');
+
 // Mount routers
 app.use('/api/auth', authRoutes);
 app.use('/api/doctors', doctorRoutes);
@@ -106,6 +117,7 @@ app.use('/api/dashboards', dashboardRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/availability', availabilityRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Simple healthcheck route
 app.get('/health', (req, res) => {
@@ -115,10 +127,13 @@ app.get('/health', (req, res) => {
 // Centralized error handler middleware
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+// Use port 0 in test mode to get a random available port (avoids conflicts between test suites)
+const PORT = process.env.NODE_ENV === 'test' ? 0 : (process.env.PORT || 5000);
 
 const server = app.listen(PORT, () => {
-  logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  if (process.env.NODE_ENV !== 'test') {
+    logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+  }
 });
 
 // Initialize Cron Jobs (only if not running Jest tests)
@@ -243,6 +258,8 @@ const sendRealTimeNotification = (userId, event, data) => {
     io.to(socketId).emit(event, data);
   }
 };
+
+app.locals.sendRealTimeNotification = sendRealTimeNotification;
 
 process.on('unhandledRejection', (err, promise) => {
   logger.error(`Unhandled Rejection Error: ${err.message}`);

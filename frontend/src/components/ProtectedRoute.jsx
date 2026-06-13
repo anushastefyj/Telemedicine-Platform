@@ -19,9 +19,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   if (allowedRoles && !allowedRoles.includes(user?.role)) {
     // If authenticated but role is unauthorized, redirect to appropriate home dashboards
     if (user?.role === 'doctor') {
-      return <Navigate to="/doctor-dashboard" replace />;
+      return <Navigate to="/dashboard/doctor" replace />;
+    } else if (user?.role === 'admin') {
+      return <Navigate to="/dashboard/admin" replace />;
     } else {
-      return <Navigate to="/patient-dashboard" replace />;
+      return <Navigate to="/dashboard/patient" replace />;
     }
   }
 

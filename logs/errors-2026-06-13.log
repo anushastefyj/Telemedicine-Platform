@@ -1,0 +1,56 @@
+[2026-06-13 12:13:14] [ERROR]: JWT Verification Error: invalid token
+[2026-06-13 12:13:17] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 12:13:17] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 12:13:18] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 12:13:18] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 12:13:18] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 12:13:18] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 12:18:24] [ERROR]: JWT Verification Error: invalid token
+[2026-06-13 12:18:27] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 12:18:27] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 12:18:27] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 12:18:27] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 12:18:27] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 12:18:27] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 12:19:40] [ERROR]: JWT Verification Error: invalid token
+[2026-06-13 12:23:33] [ERROR]: JWT Verification Error: invalid token
+[2026-06-13 12:29:25] [ERROR]: JWT Verification Error: invalid token
+[2026-06-13 12:31:24] [ERROR]: JWT Verification Error: invalid token
+[2026-06-13 12:31:55] [ERROR]: JWT Verification Error: invalid token
+[2026-06-13 12:36:09] [ERROR]: JWT Verification Error: invalid token
+[2026-06-13 12:41:24] [ERROR]: JWT Verification Error: invalid token
+[2026-06-13 12:43:42] [ERROR]: JWT Verification Error: invalid token
+[2026-06-13 13:54:21] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 13:54:21] [ERROR]: JWT Verification Error: jwt malformed
+[2026-06-13 13:58:53] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-68oany6i-7334" (type string) at path "_id" for model "Appointment"
+[2026-06-13 13:59:12] [ERROR]: Error on join-room: Cast to ObjectId failed for value "room-68oany6i-7334" (type string) at path "_id" for model "Appointment"
+[2026-06-13 13:59:12] [ERROR]: Error on join-room: Cast to ObjectId failed for value "room-68oany6i-7334" (type string) at path "_id" for model "Appointment"
+[2026-06-13 13:59:29] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-68oany6i-7334" (type string) at path "_id" for model "Appointment"
+[2026-06-13 13:59:29] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-68oany6i-7334" (type string) at path "_id" for model "Appointment"
+[2026-06-13 14:16:18] [ERROR]: Unhandled Rejection Error: Unknown API key mock_key
+[2026-06-13 19:43:13] [ERROR]: Unhandled Rejection Error: Unknown API key mock_key
+[2026-06-13 20:00:54] [ERROR]: Unhandled Rejection Error: Unknown API key mock_key
+[2026-06-13 20:47:06] [ERROR]: Unhandled Rejection Error: Unknown API key mock_key
+[2026-06-13 20:56:34] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-2jnhizny-8788" (type string) at path "_id" for model "Appointment"
+[2026-06-13 20:56:36] [ERROR]: Error on join-room: Cast to ObjectId failed for value "room-2jnhizny-8788" (type string) at path "_id" for model "Appointment"
+[2026-06-13 20:56:36] [ERROR]: Error on join-room: Cast to ObjectId failed for value "room-2jnhizny-8788" (type string) at path "_id" for model "Appointment"
+[2026-06-13 20:56:42] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-2jnhizny-8788" (type string) at path "_id" for model "Appointment"
+[2026-06-13 20:56:49] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-2jnhizny-8788" (type string) at path "_id" for model "Appointment"
+[2026-06-13 20:56:49] [ERROR]: Error on join-room: Cast to ObjectId failed for value "room-2jnhizny-8788" (type string) at path "_id" for model "Appointment"
+[2026-06-13 20:56:49] [ERROR]: Error on join-room: Cast to ObjectId failed for value "room-2jnhizny-8788" (type string) at path "_id" for model "Appointment"
+[2026-06-13 20:57:17] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-2jnhizny-8788" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:14:29] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-emedxbz9-7826" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:14:37] [ERROR]: Error on join-room: Cast to ObjectId failed for value "room-emedxbz9-7826" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:14:37] [ERROR]: Error on join-room: Cast to ObjectId failed for value "room-emedxbz9-7826" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:15:29] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-emedxbz9-7826" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:15:29] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-emedxbz9-7826" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:18:36] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-emedxbz9-7826" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:18:37] [ERROR]: Error on join-room: Cast to ObjectId failed for value "room-emedxbz9-7826" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:18:37] [ERROR]: Error on join-room: Cast to ObjectId failed for value "room-emedxbz9-7826" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:19:19] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-emedxbz9-7826" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:19:19] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-emedxbz9-7826" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:29:27] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-j273p9sj-3307" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:29:28] [ERROR]: Error on join-room: Cast to ObjectId failed for value "room-j273p9sj-3307" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:29:28] [ERROR]: Error on join-room: Cast to ObjectId failed for value "room-j273p9sj-3307" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:29:42] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-j273p9sj-3307" (type string) at path "_id" for model "Appointment"
+[2026-06-13 21:29:42] [ERROR]: Error ending call: Cast to ObjectId failed for value "room-j273p9sj-3307" (type string) at path "_id" for model "Appointment"
