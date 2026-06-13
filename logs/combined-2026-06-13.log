@@ -2591,3 +2591,7 @@
 [2026-06-13 23:06:33] [INFO]: [0mGET /api/doctors/me/appointments [36m304[0m 13.674 ms - -[0m
 [2026-06-13 23:06:33] [INFO]: [0mGET /api/appointments/6a2d8a6d1c9bb2e58b402ff7 [36m304[0m 13.023 ms - -[0m
 [2026-06-13 23:06:33] [INFO]: [0mGET /api/appointments/6a2d8a6d1c9bb2e58b402ff7 [36m304[0m 11.477 ms - -[0m
+[2026-06-13 23:14:39] [INFO]: Server running in development mode on port 5000
+[2026-06-13 23:14:39] [INFO]: User connected: 6a2d7e1cb93bad02b941bd86 (doctor) on socket bApnqMYWy14k0AzKAAAC
+[2026-06-13 23:14:39] [INFO]: User connected: 6a2d8dd91c9bb2e58b403108 (doctor) on socket g9vDqNlI8M9pQM9WAAAD
+[2026-06-13 23:14:39] [INFO]: [0mGET /api/appointments/6a2d8a6d1c9bb2e58b402ff7 [36m304[0m 244.873 ms - -[0m
